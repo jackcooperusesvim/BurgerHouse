@@ -1,8 +1,9 @@
-﻿Imports System.Text
+﻿Imports System.Linq.Expressions
+Imports System.Text
 
 'Hello, this is Andre Fontenele
 'I wrote this on May 8th
-'In this project I used an If-Then Statement as well as a For Loop (In both the traditional C iterator and the newer For In methods), and a Subprocedure (called Reset())
+'In this project I used If-Then Statement, as well as both types of For Loop , as well as some Select Case Statements, as well as a Subprocedure and a Function 
 
 Public Class Form1
     'I organized most of the UI into Arrays so that I can create nice clean loops for later on when calculating the subtotal. So it may not seem initially too logical, but (I hope) it pays off when you look at
@@ -10,27 +11,31 @@ Public Class Form1
     'To see how I use this data look to Calc_Btn_Click() and Reset().
 
     'This organization system would also make it relatively easy to edit the menu later if needed.
-    Public BurgerRadioButtons() As RadioButton
-    Public BurgerOptionStrings() As String
-    Public BurgerPricing() As Decimal
+    Public NumBurgerTypes As Integer = 4
+    Public BurgerRadioButtons(NumBurgerTypes - 1) As RadioButton
+    Public BurgerOptionStrings(NumBurgerTypes - 1) As String
+    Public BurgerPricing(NumBurgerTypes - 1) As Decimal
 
 
-    Public ToppingCheckBoxes() As CheckBox
+    Public NumToppingTypes As Integer = 10
+    Public ToppingCheckBoxes(NumToppingTypes - 1) As CheckBox
     'For toppings we can use the checkbox labels for the strings. Also special about this array is that we do not store the prices in this array directly. We have an array of Catgories which we then transform into an array of prices through a
     'Pricing dictionary in Form1_Load.
     'Again, since this is running right at start-time there shouldn't be any noticable difference for the end user. This is all for developer experience and maintainability/reconfiguration/extensibility.
-    Public ToppingCategoryStrings() As String
-    Public ToppingPricing() As Decimal
+    Public ToppingCategoryStrings(NumToppingTypes - 1) As String
+    Public ToppingPricing(NumToppingTypes - 1) As Decimal
 
 
     'For drinks, I decided to give each drink a "price multiplier", which is 1 for every drink except the free water, in which case it is 0
-    Public BeverageRadioButtons() As RadioButton
-    Public BeverageOptionStrings() As String
-    Public BeveragePriceMultipliers() As Decimal
+    Public NumBeverageTypes As Integer = 5
+    Public BeverageRadioButtons(NumBeverageTypes - 1) As RadioButton
+    Public BeverageOptionStrings(NumBeverageTypes - 1) As String
+    Public BeveragePriceMultipliers(NumBeverageTypes - 1) As Decimal
 
-    Public SizeRadioButtons() As RadioButton
-    Public SizeOptionStrings() As String
-    Public SizePricing() As Decimal
+    Public NumSizeTypes As Integer = 3
+    Public SizeRadioButtons(NumSizeTypes - 1) As RadioButton
+    Public SizeOptionStrings(NumSizeTypes - 1) As String
+    Public SizePricing(NumSizeTypes - 1) As Decimal
 
 
     'This is just to put the value in a more convenient spot in the file
@@ -39,7 +44,7 @@ Public Class Form1
     Private Sub Form1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
         Me.BurgerRadioButtons = {Me.BeefRad, Me.TurkeyRad, Me.VeggieRad, Me.BuffaloRad}
-        Me.BurgerOptionStrings = {"Beef", "Turkey", "Veggie", "Buffalo"}
+        Me.BurgerOptionStrings = {"beef", "turkey", "veggie", "buffalo"}
         Me.BurgerPricing = {4, 4.25, 5, 6}
 
 
@@ -48,12 +53,11 @@ Public Class Form1
         'Pricing dictionary in Form1_Load.
         'Again, since this is running right at start-time there shouldn't be any noticable difference for the end user. This is all for developer experience and maintainability/reconfiguration/extensibility.
         Me.ToppingCategoryStrings = {"Veg", "Veg", "Veg", "Veg", "Prem", "Prem", "Prem", "Cond", "Cond", "Cond", "Cond"}
-        Me.ToppingPricing = {}
 
 
         'For drinks, I decided to give each drink a "price multiplier", which is 1 for every drink except the free water, in which case it is 0
         Me.BeverageRadioButtons = {Me.TeaRad, Me.SodaRad, Me.WaterRad, Me.CoffeeRad, Me.OJRad}
-        Me.BeverageOptionStrings = {"Tea", "Soda", "Water", "Coffee", "OJ"}
+        Me.BeverageOptionStrings = {"tea", "soda", "water", "voffee", "OJ"}
         Me.BeveragePriceMultipliers = {1, 1, 0, 1, 1}
 
         Me.SizeRadioButtons = {Me.SmallRad, Me.MedRad, Me.LargeRad}
@@ -68,20 +72,18 @@ Public Class Form1
         ToppingCategoryPricing.Add("Cond", 0)
 
         'Populate ToppingPricing Array
-        Dim Price As Decimal = -1
-        For Each CategoryString In ToppingCategoryStrings
-            ToppingCategoryPricing.TryGetValue(CategoryString, Price)
-            If Price = -1 Then
-                MessageBox.Show("ERROR: Bad Category: " & CategoryString)
-            Else
-                Me.ToppingPricing.Append(Price)
-            End If
+        Dim Price As Decimal
+        For i As Integer = 0 To NumToppingTypes - 1
+            ToppingCategoryPricing.TryGetValue(ToppingCategoryStrings(i), Price)
+            Me.ToppingPricing(i) = Price
         Next
 
         'There is probably a more DRY way to do this where you can embed extra information via inheritance on RadioButton or something similar, and if I were more familiar with the OOP aspect of VB.NET I would prob come up with a nicer solution.
 
 
-        'Clears the UI in preperation for user input
+        'This line was intended to clear the UI in preperation for user input, but apparently sometime just after loading, the
+        'Beef Radio button is automatically checked. The only solution to this would probably set up Me.Reset() to run Asynchronously
+        'and add a small time delay at the beginning of the function
         Me.Reset()
 
     End Sub
@@ -113,14 +115,15 @@ Public Class Form1
         'RunningSubTotal will eventually be put into the subtotal text field, and the rest will be concatenated into a sort of Reciept text field
         Dim RunningSubTotal As Decimal = 0
         Dim BurgerType As String = ""
-        Dim ToppingStrings() As String
+        Dim NumToppingsOnBurger As Integer = 0
+        Dim ToppingStrings(NumToppingTypes) As String
         Dim BeverageType As String = ""
         Dim BeverageSize As String = ""
         Dim BeveragePriceMultiplier As Decimal
         Dim BeverageBasePrice As Decimal
 
         'Add Burger Cost and Type
-        For i As Integer = 0 To (Len(Me.BurgerRadioButtons) - 1)
+        For i As Integer = 0 To Me.NumBurgerTypes - 1
             If Me.BurgerRadioButtons(i).Checked Then
                 RunningSubTotal = Me.BurgerPricing(i)
                 BurgerType = Me.BurgerOptionStrings(i)
@@ -135,17 +138,18 @@ Public Class Form1
 
 
         'Add Topping Cost and Types
-        For i As Integer = 0 To Len(Me.ToppingCheckBoxes) - 1
+        For i As Integer = 0 To Me.NumToppingTypes - 1
             If Me.ToppingCheckBoxes(i).Checked Then
                 RunningSubTotal += Me.ToppingPricing(i)
                 'I would do the string concatentation inline here except the logic for figuring out where to put the columns gets complicated
-                ToppingStrings.Append(Me.ToppingCheckBoxes(i).Text)
+                ToppingStrings(NumToppingsOnBurger) = Me.ToppingCheckBoxes(i).Text
+                NumToppingsOnBurger += 1
             End If
         Next
 
 
         'Add Beverage Type and find BeveragePriceMultiplier
-        For i As Integer = 0 To Len(Me.BeverageRadioButtons)
+        For i As Integer = 0 To Me.NumBeverageTypes - 1
             If Me.BeverageRadioButtons(i).Checked Then
                 BeverageType = Me.BeverageOptionStrings(i)
                 BeveragePriceMultiplier = Me.BeveragePriceMultipliers(i)
@@ -159,7 +163,7 @@ Public Class Form1
         End If
 
         'Calculate Base Beverage Cost
-        For i As Integer = 0 To Len(Me.SizeRadioButtons)
+        For i As Integer = 0 To Me.NumSizeTypes - 1
             If Me.SizeRadioButtons(i).Checked Then
                 BeverageSize = Me.SizeOptionStrings(i)
                 BeverageBasePrice = Me.SizePricing(i)
@@ -174,23 +178,19 @@ Public Class Form1
         'Calculate Beverage Cost and add to running subtotal
         RunningSubTotal += BeverageBasePrice * BeveragePriceMultiplier
 
-        'Generate Reciept String
+
+        'Create final ReciptString
         Dim RecieptString As String
-        If Len(ToppingStrings) = 0 Then
+        'Add Burger To Recipt
+        If ToppingStrings(0) = "" Then
             RecieptString = "You ordered a plain " & BurgerType & " Burger"
-
         Else
-            RecieptString = "You ordered a " & BurgerType & " Burger with " & ToppingStrings(0)
-
-            If Len(ToppingStrings) > 1 Then
-                For i As Integer = 1 To Len(ToppingStrings) - 1
-                    If i = 0 Then
-                        RecieptString &= ", " & ToppingStrings(i)
-                    End If
-                Next
-            End If
+            RecieptString = "You ordered a " & BurgerType & " Burger"
         End If
 
+        'Add Toppings To Recipt
+        RecieptString &= GenerateToppingString(ToppingStrings, NumToppingsOnBurger)
+        'Add Beverage To Recipt
         RecieptString &= " with a " & BeverageSize & " " & BeverageType
 
         'Calculate the Taxes and Total Cost. NOTE: We are not given a spec for the amount to be taxed so I assume that it is ~5% which comes decently close to the example we are given. This is also rounded up to the nearest cent using Math.Ceiling
@@ -206,5 +206,42 @@ Public Class Form1
 
     Private Sub Reset_Btn_Click(sender As Object, e As EventArgs) Handles Reset_Btn.Click
         Me.Reset()
+    End Sub
+
+    ' I put a lot of work into this next function, so please do take a look. What this function does is it turns a array of toppings (and a number for indexing the end of the array) into a formatted string using all (hopefully) the proper grammer
+    'eg:
+    '   ... Burger ...
+    '   ... Burger with Guac ...
+    '   ... Burger with Guac and Mayo ...
+    '   ... Burger with Guac, Mayo, Cheese, and Pickles ...
+    ' These 4 examples above also each each correspond with one Case in the Select Case Statement below
+    Function GenerateToppingString(ByVal ToppingStringsOnBurger() As String, NumToppings As Integer) As String
+        Select Case NumToppings
+            Case 0
+                Return ""
+            Case 1
+                Return " with " & ToppingStringsOnBurger(0)
+            Case 2
+                Return " with " & ToppingStringsOnBurger(0) & " and " & ToppingStringsOnBurger(1)
+            Case Else
+                Dim ToppingFormattedString As String = " with "
+                For i As Integer = 0 To NumToppings - 1
+                    Select Case i
+                        Case 0
+                            ToppingFormattedString &= LCase(ToppingStringsOnBurger(i))
+                        Case NumToppings - 1
+                            ToppingFormattedString &= ", and "
+                            ToppingFormattedString &= LCase(ToppingStringsOnBurger(i))
+                        Case Else
+                            ToppingFormattedString &= ", "
+                            ToppingFormattedString &= LCase(ToppingStringsOnBurger(i))
+                    End Select
+                Next
+                Return ToppingFormattedString
+        End Select
+    End Function
+
+    Private Sub Exit_Btn_Click(sender As Object, e As EventArgs) Handles Exit_Btn.Click
+        Me.Close()
     End Sub
 End Class
