@@ -1,0 +1,12 @@
+C:\Users\A00377359\Desktop\BurgerHouse\BurgerHouse\bin\Debug\BurgerHouse.exe.config
+C:\Users\A00377359\Desktop\BurgerHouse\BurgerHouse\bin\Debug\BurgerHouse.exe
+C:\Users\A00377359\Desktop\BurgerHouse\BurgerHouse\bin\Debug\BurgerHouse.pdb
+C:\Users\A00377359\Desktop\BurgerHouse\BurgerHouse\bin\Debug\BurgerHouse.xml
+C:\Users\A00377359\Desktop\BurgerHouse\BurgerHouse\obj\Debug\BurgerHouse.vbproj.AssemblyReference.cache
+C:\Users\A00377359\Desktop\BurgerHouse\BurgerHouse\obj\Debug\BurgerHouse.Form1.resources
+C:\Users\A00377359\Desktop\BurgerHouse\BurgerHouse\obj\Debug\BurgerHouse.Resources.resources
+C:\Users\A00377359\Desktop\BurgerHouse\BurgerHouse\obj\Debug\BurgerHouse.vbproj.GenerateResource.cache
+C:\Users\A00377359\Desktop\BurgerHouse\BurgerHouse\obj\Debug\BurgerHouse.vbproj.CoreCompileInputs.cache
+C:\Users\A00377359\Desktop\BurgerHouse\BurgerHouse\obj\Debug\BurgerHouse.exe
+C:\Users\A00377359\Desktop\BurgerHouse\BurgerHouse\obj\Debug\BurgerHouse.xml
+C:\Users\A00377359\Desktop\BurgerHouse\BurgerHouse\obj\Debug\BurgerHouse.pdb
